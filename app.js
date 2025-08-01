@@ -372,16 +372,6 @@ class ElliottWaveApp {
             timestamp: new Date()
         };
     }
-            this.populateChartSymbols();
-            this.showLoading(false);
-            this.updateLastUpdateTime();
-            
-        } catch (error) {
-            console.error('Error loading crypto data:', error);
-            this.showError('حدث خطأ في تحميل البيانات. سيتم المحاولة مرة أخرى...');
-            this.showLoading(false);
-        }
-    }
 
     // دالة تحليل موجات إليوت
     analyzeElliottWave(klineData) {
