@@ -136,118 +136,242 @@ class ElliottWaveApp {
         try {
             this.showLoading(true);
             
-            // بيانات وهمية للاختبار
-            const mockData = [
-                {
-                    symbol: 'BTC',
-                    currentPrice: 43250.50,
-                    priceChange: 2.45,
-                    volume: 28475000000,
-                    high24h: 43500.00,
-                    low24h: 42800.00,
-                    lastUpdate: new Date(),
-                    elliottWave: {
-                        waveType: 'impulse',
-                        currentPhase: 'wave-3',
-                        peaks: 5,
-                        troughs: 4,
-                        peaksData: [43000, 43200, 43500, 43300, 43400],
-                        troughsData: [42800, 42900, 43100, 43250],
-                        fibonacciRatios: { '0.382': 43100, '0.618': 43300 },
-                        nextDirection: 'bullish',
-                        confidence: 'high',
-                                        timestamp: new Date()
-                    }
-                },
-                {
-                    symbol: 'ETH',
-                    currentPrice: 2650.75,
-                    priceChange: -1.20,
-                    volume: 15800000000,
-                    high24h: 2680.00,
-                    low24h: 2620.00,
-                        lastUpdate: new Date(),
-                    elliottWave: {
-                        waveType: 'correction',
-                        currentPhase: 'wave-b',
-                        peaks: 3,
-                        troughs: 2,
-                        peaksData: [2680, 2660, 2655],
-                        troughsData: [2620, 2640],
-                        fibonacciRatios: { '0.382': 2640, '0.618': 2660 },
-                        nextDirection: 'bearish',
-                        confidence: 'medium',
-                        timestamp: new Date()
-                    }
-                },
-                {
-                    symbol: 'BNB',
-                    currentPrice: 315.25,
-                    priceChange: 0.85,
-                    volume: 8500000000,
-                    high24h: 318.00,
-                    low24h: 312.00,
-                    lastUpdate: new Date(),
-                    elliottWave: {
-                        waveType: 'impulse',
-                        currentPhase: 'wave-5',
-                        peaks: 4,
-                        troughs: 3,
-                        peaksData: [312, 314, 316, 318],
-                        troughsData: [310, 313, 315],
-                        fibonacciRatios: { '0.382': 313, '0.618': 316 },
-                        nextDirection: 'bullish',
-                        confidence: 'high',
-                        timestamp: new Date()
-                    }
-                },
-                {
-                    symbol: 'ADA',
-                    currentPrice: 0.485,
-                    priceChange: 3.20,
-                    volume: 1200000000,
-                    high24h: 0.490,
-                    low24h: 0.470,
-                    lastUpdate: new Date(),
-                    elliottWave: {
-                        waveType: 'impulse',
-                        currentPhase: 'wave-1',
-                        peaks: 2,
-                        troughs: 1,
-                        peaksData: [0.485, 0.490],
-                        troughsData: [0.470],
-                        fibonacciRatios: { '0.382': 0.475, '0.618': 0.485 },
-                        nextDirection: 'bullish',
-                        confidence: 'medium',
-                        timestamp: new Date()
-                    }
-                },
-                {
-                    symbol: 'XRP',
-                    currentPrice: 0.625,
-                    priceChange: -0.80,
-                    volume: 980000000,
-                    high24h: 0.630,
-                    low24h: 0.620,
-                    lastUpdate: new Date(),
-                    elliottWave: {
-                        waveType: 'correction',
-                        currentPhase: 'wave-c',
-                        peaks: 2,
-                        troughs: 2,
-                        peaksData: [0.630, 0.625],
-                        troughsData: [0.620, 0.622],
-                        fibonacciRatios: { '0.382': 0.622, '0.618': 0.625 },
-                        nextDirection: 'neutral',
-                        confidence: 'low',
-                        timestamp: new Date()
+            // قائمة العملات المشفرة الرئيسية
+            const symbols = ['BTC', 'ETH', 'BNB', 'ADA', 'XRP', 'SOL', 'DOT', 'AVAX', 'MATIC', 'LINK'];
+            
+            // محاولة الحصول على البيانات من مصادر متعددة
+            let cryptoData = [];
+            
+            // المصدر الأول: CoinGecko API (مجاني)
+            try {
+                cryptoData = await this.fetchFromCoinGecko(symbols);
+            } catch (error) {
+                console.warn('CoinGecko API failed, trying alternative sources...', error);
+                
+                // المصدر الثاني: Binance API
+                try {
+                    cryptoData = await this.fetchFromBinance(symbols);
+                } catch (error2) {
+                    console.warn('Binance API failed, trying CryptoCompare...', error2);
+                    
+                    // المصدر الثالث: CryptoCompare API
+                    try {
+                        cryptoData = await this.fetchFromCryptoCompare(symbols);
+                    } catch (error3) {
+                        console.error('All APIs failed, using fallback data', error3);
+                        cryptoData = this.getFallbackData(symbols);
                     }
                 }
-            ];
+            }
             
-            this.cryptoData = mockData;
+            // تحليل موجات إليوت لكل عملة
+            for (let crypto of cryptoData) {
+                try {
+                    const klineData = await this.fetchKlineData(crypto.symbol);
+                    if (klineData && klineData.length > 0) {
+                        crypto.elliottWave = this.analyzeElliottWave(klineData);
+                    } else {
+                        crypto.elliottWave = this.generateDefaultElliottWave();
+                    }
+                } catch (error) {
+                    console.warn(`Failed to analyze ${crypto.symbol}:`, error);
+                    crypto.elliottWave = this.generateDefaultElliottWave();
+                }
+            }
+            
+            this.cryptoData = cryptoData;
             this.renderCryptoGrid();
             this.updateMarketSummary();
+            
+        } catch (error) {
+            console.error('Error loading crypto data:', error);
+            this.showError('فشل في تحميل بيانات العملات المشفرة');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    // جلب البيانات من CoinGecko API
+    async fetchFromCoinGecko(symbols) {
+        const coinIds = {
+            'BTC': 'bitcoin',
+            'ETH': 'ethereum',
+            'BNB': 'binancecoin',
+            'ADA': 'cardano',
+            'XRP': 'ripple',
+            'SOL': 'solana',
+            'DOT': 'polkadot',
+            'AVAX': 'avalanche-2',
+            'MATIC': 'matic-network',
+            'LINK': 'chainlink'
+        };
+        
+        const ids = symbols.map(symbol => coinIds[symbol]).filter(Boolean).join(',');
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_24hr_high=true&include_24hr_low=true`);
+        
+        if (!response.ok) {
+            throw new Error(`CoinGecko API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const cryptoData = [];
+        
+        for (let symbol of symbols) {
+            const coinId = coinIds[symbol];
+            if (data[coinId]) {
+                const coinData = data[coinId];
+                cryptoData.push({
+                    symbol: symbol,
+                    currentPrice: coinData.usd,
+                    priceChange: coinData.usd_24h_change || 0,
+                    volume: coinData.usd_24h_vol || 0,
+                    high24h: coinData.usd_24h_high || coinData.usd,
+                    low24h: coinData.usd_24h_low || coinData.usd,
+                    lastUpdate: new Date(),
+                    source: 'CoinGecko'
+                });
+            }
+        }
+        
+        return cryptoData;
+    }
+
+    // جلب البيانات من Binance API
+    async fetchFromBinance(symbols) {
+        const cryptoData = [];
+        
+        for (let symbol of symbols) {
+            try {
+                const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    cryptoData.push({
+                        symbol: symbol,
+                        currentPrice: parseFloat(data.lastPrice),
+                        priceChange: parseFloat(data.priceChangePercent),
+                        volume: parseFloat(data.volume) * parseFloat(data.lastPrice),
+                        high24h: parseFloat(data.highPrice),
+                        low24h: parseFloat(data.lowPrice),
+                        lastUpdate: new Date(),
+                        source: 'Binance'
+                    });
+                }
+            } catch (error) {
+                console.warn(`Failed to fetch ${symbol} from Binance:`, error);
+            }
+        }
+        
+        if (cryptoData.length === 0) {
+            throw new Error('No data received from Binance');
+        }
+        
+        return cryptoData;
+    }
+
+    // جلب البيانات من CryptoCompare API
+    async fetchFromCryptoCompare(symbols) {
+        const fsyms = symbols.join(',');
+        const response = await fetch(`https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${fsyms}&tsyms=USD`);
+        
+        if (!response.ok) {
+            throw new Error(`CryptoCompare API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const cryptoData = [];
+        
+        for (let symbol of symbols) {
+            if (data.RAW && data.RAW[symbol] && data.RAW[symbol].USD) {
+                const coinData = data.RAW[symbol].USD;
+                cryptoData.push({
+                    symbol: symbol,
+                    currentPrice: coinData.PRICE,
+                    priceChange: coinData.CHANGEPCT24HOUR,
+                    volume: coinData.VOLUME24HOUR,
+                    high24h: coinData.HIGH24HOUR,
+                    low24h: coinData.LOW24HOUR,
+                    lastUpdate: new Date(),
+                    source: 'CryptoCompare'
+                });
+            }
+        }
+        
+        return cryptoData;
+    }
+
+    // بيانات احتياطية في حالة فشل جميع APIs
+    getFallbackData(symbols) {
+        const fallbackPrices = {
+            'BTC': 45000,
+            'ETH': 2800,
+            'BNB': 320,
+            'ADA': 0.5,
+            'XRP': 0.65,
+            'SOL': 100,
+            'DOT': 7,
+            'AVAX': 35,
+            'MATIC': 0.8,
+            'LINK': 15
+        };
+        
+        return symbols.map(symbol => ({
+            symbol: symbol,
+            currentPrice: fallbackPrices[symbol] || 100,
+            priceChange: (Math.random() - 0.5) * 10,
+            volume: Math.random() * 1000000000,
+            high24h: fallbackPrices[symbol] * 1.05,
+            low24h: fallbackPrices[symbol] * 0.95,
+            lastUpdate: new Date(),
+            source: 'Fallback'
+        }));
+    }
+
+    // جلب بيانات الشموع اليابانية للتحليل
+    async fetchKlineData(symbol) {
+        try {
+            // محاولة من Binance أولاً
+            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=1h&limit=100`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                return data.map(kline => [
+                    kline[0], // وقت الفتح
+                    parseFloat(kline[1]), // سعر الفتح
+                    parseFloat(kline[2]), // أعلى سعر
+                    parseFloat(kline[3]), // أقل سعر
+                    parseFloat(kline[4]), // سعر الإغلاق
+                    parseFloat(kline[5]), // الحجم
+                    kline[6], // وقت الإغلاق
+                    parseFloat(kline[7]), // قيمة التداول
+                    parseInt(kline[8]), // عدد الصفقات
+                    parseFloat(kline[9]), // حجم المشتري
+                    parseFloat(kline[10]), // قيمة المشتري
+                    parseFloat(kline[11]) // تجاهل
+                ]);
+            }
+        } catch (error) {
+            console.warn(`Failed to fetch kline data for ${symbol}:`, error);
+        }
+        
+        return null;
+    }
+
+    // إنشاء تحليل إليوت ويف افتراضي
+    generateDefaultElliottWave() {
+        return {
+            waveType: 'impulse',
+            currentPhase: 'wave-1',
+            peaks: 2,
+            troughs: 1,
+            peaksData: [100, 105],
+            troughsData: [95],
+            fibonacciRatios: { '0.382': 98, '0.618': 102 },
+            nextDirection: 'neutral',
+            confidence: 'low',
+            timestamp: new Date()
+        };
+    }
             this.populateChartSymbols();
             this.showLoading(false);
             this.updateLastUpdateTime();
@@ -571,6 +695,10 @@ class ElliottWaveApp {
                     <div class="detail-label">آخر تحديث</div>
                     <div class="detail-value">${this.formatTime(crypto.lastUpdate)}</div>
                 </div>
+                <div class="detail-item">
+                    <div class="detail-label">مصدر البيانات</div>
+                    <div class="detail-value source-${crypto.source?.toLowerCase() || 'unknown'}">${this.getSourceText(crypto.source)}</div>
+                </div>
             </div>
             
             <div class="elliott-wave-info">
@@ -872,38 +1000,7 @@ class ElliottWaveApp {
         }
     }
 
-    generateMockKlineData(symbol, timeframe) {
-        // إنشاء بيانات وهمية للشارت
-        const data = [];
-        const basePrice = 1000; // سعر أساسي
-        const now = Date.now();
-        
-        for (let i = 0; i < 100; i++) {
-            const time = now - (100 - i) * 60 * 60 * 1000; // كل ساعة
-            const open = basePrice + Math.random() * 100;
-            const high = open + Math.random() * 50;
-            const low = open - Math.random() * 50;
-            const close = open + (Math.random() - 0.5) * 20;
-            const volume = Math.random() * 1000000;
-            
-            data.push([
-                time, // وقت الفتح
-                open, // سعر الفتح
-                high, // أعلى سعر
-                low, // أقل سعر
-                close, // سعر الإغلاق
-                volume, // الحجم
-                time + 3600000, // وقت الإغلاق
-                volume * close, // قيمة التداول
-                0, // عدد الصفقات
-                0, // حجم المشتري
-                0, // قيمة المشتري
-                0 // تجاهل
-            ]);
-        }
-        
-        return data;
-    }
+
 
     async loadChart(symbol, timeframe = '1h') {
         const chartContainer = document.getElementById('chartContainer');
@@ -1134,6 +1231,17 @@ class ElliottWaveApp {
             '1w': 'أسبوع واحد'
         };
         return timeframes[timeframe] || timeframe;
+    }
+
+    getSourceText(source) {
+        const sources = {
+            'CoinGecko': 'كوين جيكو',
+            'Binance': 'بينانس',
+            'CryptoCompare': 'كريبتو كومبير',
+            'Fallback': 'بيانات احتياطية',
+            'unknown': 'غير معروف'
+        };
+        return sources[source] || source || 'غير معروف';
     }
 
     getFibonacciLabel(key) {

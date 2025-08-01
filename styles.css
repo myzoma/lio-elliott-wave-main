@@ -1259,4 +1259,32 @@ body {
     .elliott-analysis {
         grid-template-columns: 1fr;
     }
+}
+
+/* Data Source Styling */
+.source-coingecko {
+    color: #00d4aa;
+    font-weight: 600;
+}
+
+.source-binance {
+    color: #f0b90b;
+    font-weight: 600;
+}
+
+.source-cryptocompare {
+    color: #1e3a8a;
+    font-weight: 600;
+}
+
+.source-fallback {
+    color: #6b7280;
+    font-weight: 500;
+    font-style: italic;
+}
+
+.source-unknown {
+    color: #9ca3af;
+    font-weight: 500;
+    font-style: italic;
 } 
