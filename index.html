@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محلل موجات إليوت للعملات المشفرة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>محلل موجات إليوت</h1>
+                </div>
+                <div class="header-info">
+                    <div class="last-update">
+                        <i class="fas fa-clock"></i>
+                        <span>آخر تحديث: <span id="lastUpdate">--:--</span></span>
+                    </div>
+                    <div class="auto-refresh">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>تحديث تلقائي كل 5 دقائق</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="navigation">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="overview">
+                    <i class="fas fa-th-large"></i>
+                    نظرة عامة
+                </button>
+                <button class="nav-tab" data-tab="analysis">
+                    <i class="fas fa-chart-bar"></i>
+                    التحليل التفصيلي
+                </button>
+                <button class="nav-tab" data-tab="charts">
+                    <i class="fas fa-chart-area"></i>
+                    الرسوم البيانية
+                </button>
+                <button class="nav-tab" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    الإعدادات
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Loading Screen -->
+            <div class="loading-screen" id="loadingScreen">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>جاري تحميل بيانات السوق وتحليل موجات إليوت...</p>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview">
+                <div class="overview-header">
+                    <h2>نظرة عامة على السوق</h2>
+                    <div class="filters">
+                        <select id="waveTypeFilter" class="filter-select">
+                            <option value="all">جميع أنواع الموجات</option>
+                            <option value="impulse">موجات الدفع</option>
+                            <option value="correction">موجات التصحيح</option>
+                            <option value="forming">موجات قيد التكوين</option>
+                        </select>
+                        <select id="confidenceFilter" class="filter-select">
+                            <option value="all">جميع مستويات الثقة</option>
+                            <option value="high">ثقة عالية</option>
+                            <option value="medium">ثقة متوسطة</option>
+                            <option value="low">ثقة منخفضة</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="market-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3>إجمالي العملات</h3>
+                            <span id="totalCoins">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3>اتجاه صاعد</h3>
+                            <span id="bullishCount">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3>اتجاه هابط</h3>
+                            <span id="bearishCount">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3>ثقة عالية</h3>
+                            <span id="highConfidenceCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="crypto-grid" id="cryptoGrid">
+                    <!-- Crypto cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Analysis Tab -->
+            <div class="tab-content" id="analysis">
+                <div class="analysis-header">
+                    <h2>التحليل التفصيلي لموجات إليوت</h2>
+                    <div class="analysis-controls">
+                        <select id="analysisSymbol" class="chart-select">
+                            <option value="">اختر العملة</option>
+                        </select>
+                        <button class="chart-button" onclick="showSelectedAnalysis()">
+                            <i class="fas fa-chart-bar"></i>
+                            عرض التحليل
+                        </button>
+                    </div>
+                </div>
+                <div class="analysis-content" id="analysisContent">
+                    <div class="placeholder">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>اختر عملة من القائمة لعرض التحليل التفصيلي لموجات إليوت</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Tab -->
+            <div class="tab-content" id="charts">
+                <div class="charts-header">
+                    <h2>الرسوم البيانية التفاعلية - TradingView</h2>
+                    <div class="chart-controls">
+                        <select id="chartSymbol" class="chart-select">
+                            <option value="">اختر العملة</option>
+                        </select>
+                        <select id="chartTimeframe" class="chart-select">
+                            <option value="1">1 دقيقة</option>
+                            <option value="5">5 دقائق</option>
+                            <option value="15">15 دقيقة</option>
+                            <option value="30">30 دقيقة</option>
+                            <option value="60" selected>1 ساعة</option>
+                            <option value="240">4 ساعات</option>
+                            <option value="1D">يوم واحد</option>
+                            <option value="1W">أسبوع واحد</option>
+                        </select>
+                        <button class="chart-button" onclick="loadTradingViewChart()">
+                            <i class="fas fa-chart-line"></i>
+                            تحميل الشارت
+                        </button>
+                        <button class="chart-button" onclick="analyzeElliottWaves()">
+                            <i class="fas fa-wave-square"></i>
+                            تحليل موجات إليوت
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container" id="chartContainer">
+                    <div id="tradingview-widget" class="tradingview-widget"></div>
+                </div>
+                <div class="elliott-analysis-panel" id="elliottAnalysisPanel">
+                    <div class="placeholder">
+                        <i class="fas fa-chart-bar"></i>
+                        <p>اضغط على "تحليل موجات إليوت" لعرض التحليل التفصيلي</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings">
+                <div class="settings-header">
+                    <h2>إعدادات التطبيق</h2>
+                </div>
+                <div class="settings-content">
+                    <div class="setting-group">
+                        <h3>إعدادات التحديث</h3>
+                        <div class="setting-item">
+                            <label for="updateInterval">فترة التحديث التلقائي:</label>
+                            <select id="updateInterval">
+                                <option value="1">كل دقيقة</option>
+                                <option value="5" selected>كل 5 دقائق</option>
+                                <option value="15">كل 15 دقيقة</option>
+                                <option value="30">كل 30 دقيقة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <h3>إعدادات العرض</h3>
+                        <div class="setting-item">
+                            <label for="themeSelect">المظهر:</label>
+                            <select id="themeSelect">
+                                <option value="light" selected>فاتح</option>
+                                <option value="dark">داكن</option>
+                                <option value="auto">تلقائي</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="languageSelect">اللغة:</label>
+                            <select id="languageSelect">
+                                <option value="ar" selected>العربية</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>محلل موجات إليوت للعملات المشفرة - مصدر البيانات: Binance API</p>
+                <p>تم التطوير باستخدام تقنيات حديثة لتحليل السوق</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal for detailed analysis -->
+    <div class="modal" id="analysisModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">تحليل موجات إليوت</h3>
+                <button class="modal-close" id="modalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TradingView Widget Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
