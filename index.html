@@ -2,15 +2,24 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>محلل موجات إليوت للعملات المشفرة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Changa:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="app-container">
         <!-- Header -->
+        <!-- تنبيه الشفافية -->
+        <div style="background: #e8f5e8; border: 2px solid #4caf50; padding: 10px; text-align: center; margin: 10px;">
+            <p style="margin: 0; font-weight: bold; color: #2e7d32;">
+                🛡️ <strong>ضمان الشفافية:</strong> هذا التطبيق يستخدم بيانات حقيقية فقط من APIs موثوقة (CoinGecko, Binance, CryptoCompare). 
+                لا نستخدم أي بيانات وهمية أو تحليلات مزيفة. إذا فشلت APIs، سيظهر خطأ واضح.
+            </p>
+        </div>
+
         <header class="header">
             <div class="header-content">
                 <div class="logo">
@@ -25,6 +34,10 @@
                     <div class="auto-refresh">
                         <i class="fas fa-sync-alt"></i>
                         <span>تحديث تلقائي كل 5 دقائق</span>
+                    </div>
+                    <div class="data-source-info" style="background: #e8f5e8; padding: 5px 10px; border-radius: 3px; margin-top: 5px; font-size: 0.8em;">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>بيانات حقيقية من: CoinGecko, Binance, CryptoCompare</span>
                     </div>
                 </div>
             </div>
@@ -151,7 +164,7 @@
             <!-- Charts Tab -->
             <div class="tab-content" id="charts">
                 <div class="charts-header">
-                    <h2>الرسوم البيانية التفاعلية </h2>
+                    <h2>الرسوم البيانية التفاعلية - TradingView</h2>
                     <div class="chart-controls">
                         <select id="chartSymbol" class="chart-select">
                             <option value="">اختر العملة</option>
@@ -251,6 +264,8 @@
         </div>
     </div>
 
+    <!-- Elliott Wave Analyzer Script -->
+    <script src="elliottWaveAnalyzer.js.js"></script>
     <!-- TradingView Widget Script -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script src="app.js"></script>

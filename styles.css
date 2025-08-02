@@ -1322,11 +1322,7 @@ body {
     font-weight: 600;
 }
 
-.source-fallback {
-    color: #6b7280;
-    font-weight: 500;
-    font-style: italic;
-}
+/* تم حذف أنماط البيانات الوهمية */
 
 .source-unknown {
     color: #9ca3af;

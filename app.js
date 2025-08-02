@@ -160,8 +160,8 @@ class ElliottWaveApp {
                     try {
                         cryptoData = await this.fetchFromCryptoCompare(symbols);
                     } catch (error3) {
-                        console.error('All APIs failed, using fallback data', error3);
-                        cryptoData = this.getFallbackData(symbols);
+                        console.error('All APIs failed - cannot provide real data', error3);
+                        throw new Error('لا يمكن الحصول على بيانات حقيقية من أي مصدر. يرجى المحاولة لاحقاً.');
                     }
                 }
             }
@@ -302,65 +302,7 @@ class ElliottWaveApp {
         return cryptoData;
     }
 
-    // بيانات احتياطية في حالة فشل جميع APIs
-    getFallbackData(symbols) {
-        const fallbackPrices = {
-            'BTC': 45000,
-            'ETH': 2800,
-            'BNB': 320,
-            'ADA': 0.5,
-            'XRP': 0.65,
-            'SOL': 100,
-            'DOT': 7,
-            'AVAX': 35,
-            'MATIC': 0.8,
-            'LINK': 15
-        };
-        
-        // بيانات تغيير الأسعار الواقعية (بناءً على اتجاهات السوق الحالية)
-        const fallbackChanges = {
-            'BTC': -8.5,    // هابط بقوة كما ذكر المستخدم
-            'ETH': -6.2,    // هابط
-            'BNB': -4.1,    // هابط معتدل
-            'ADA': -3.8,    // هابط معتدل
-            'XRP': -5.2,    // هابط
-            'SOL': -7.1,    // هابط بقوة
-            'DOT': -4.5,    // هابط معتدل
-            'AVAX': -6.8,   // هابط
-            'MATIC': -3.2,  // هابط خفيف
-            'LINK': -4.9    // هابط معتدل
-        };
-        
-        const fallbackVolumes = {
-            'BTC': 28000000000,
-            'ETH': 15000000000,
-            'BNB': 2500000000,
-            'ADA': 1200000000,
-            'XRP': 1800000000,
-            'SOL': 3500000000,
-            'DOT': 800000000,
-            'AVAX': 600000000,
-            'MATIC': 1100000000,
-            'LINK': 900000000
-        };
-        
-        return symbols.map(symbol => {
-            const basePrice = fallbackPrices[symbol] || 100;
-            const priceChange = fallbackChanges[symbol] || -2.5; // افتراضي هابط
-            const volume = fallbackVolumes[symbol] || 500000000;
-            
-            return {
-                symbol: symbol,
-                currentPrice: basePrice,
-                priceChange: priceChange,
-                volume: volume,
-                high24h: basePrice * (1 + Math.abs(priceChange) / 200), // أعلى سعر بناءً على التقلب
-                low24h: basePrice * (1 - Math.abs(priceChange) / 100),  // أقل سعر بناءً على التقلب
-                lastUpdate: new Date(),
-                source: 'Fallback'
-            };
-        });
-    }
+    // تم حذف هذه الدالة نهائياً - لا نستخدم بيانات وهمية
 
     // جلب بيانات الشموع اليابانية للتحليل
     async fetchKlineData(symbol) {
@@ -1263,7 +1205,7 @@ class ElliottWaveApp {
             'CoinGecko': 'كوين جيكو',
             'Binance': 'بينانس',
             'CryptoCompare': 'كريبتو كومبير',
-            'Fallback': 'بيانات احتياطية',
+
             'unknown': 'غير معروف'
         };
         return sources[source] || source || 'غير معروف';
@@ -1410,10 +1352,33 @@ class ElliottWaveApp {
         analysisPanel.innerHTML = '<div class="loading">جاري تحليل البيانات...</div>';
         
         try {
-            // تحليل موجات إليوت الحقيقي
+            // تحليل موجات إليوت الحقيقي فقط
             const analysis = await this.performElliottWaveAnalysis(symbol);
             
+            // التحقق من وجود خطأ في التحليل
+            if (analysis.error) {
+                analysisPanel.innerHTML = `
+                    <div class="error">
+                        <h4>⚠️ لا يمكن إجراء تحليل دقيق</h4>
+                        <p><strong>السبب:</strong> ${analysis.message}</p>
+                        <p><strong>ملاحظة مهمة:</strong> نحن لا نقدم تحليلات وهمية أو مضللة. التحليل يتطلب بيانات حقيقية ودقيقة.</p>
+                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px;">
+                            <p><strong>ما يمكنك فعله:</strong></p>
+                            <ul>
+                                <li>المحاولة مرة أخرى بعد بضع دقائق</li>
+                                <li>التحقق من اتصال الإنترنت</li>
+                                <li>استخدام مصادر أخرى للبيانات المالية</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
             analysisPanel.innerHTML = `
+                <div style="background: #e8f5e8; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                    <p><strong>✅ تحليل حقيقي:</strong> هذا التحليل مبني على بيانات حقيقية من APIs موثوقة</p>
+                </div>
                 <h4>تحليل موجات إليوت لـ ${symbol}</h4>
                 <div class="elliott-analysis">
                     <div class="analysis-card">
@@ -1443,13 +1408,17 @@ class ElliottWaveApp {
                         ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
                     </ul>
                 </div>
+                <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; font-size: 0.9em;">
+                    <p><strong>⚠️ تنبيه:</strong> هذا التحليل للأغراض التعليمية فقط. استشر خبير مالي قبل اتخاذ أي قرارات استثمارية.</p>
+                </div>
             `;
         } catch (error) {
             console.error('Error in Elliott Wave analysis:', error);
             analysisPanel.innerHTML = `
                 <div class="error">
-                    <h4>خطأ في التحليل</h4>
-                    <p>حدث خطأ أثناء تحليل البيانات. يرجى المحاولة مرة أخرى.</p>
+                    <h4>⚠️ خطأ في الحصول على البيانات</h4>
+                    <p><strong>السبب:</strong> ${error.message}</p>
+                    <p><strong>ملاحظة مهمة:</strong> نحن لا نقدم تحليلات وهمية. نحتاج بيانات حقيقية لتقديم تحليل دقيق.</p>
                 </div>
             `;
         }
@@ -1461,49 +1430,53 @@ class ElliottWaveApp {
             const cryptoData = this.cryptoData.find(coin => coin.symbol === symbol);
             const klineData = await this.fetchKlineData(symbol);
             
+            // إذا لم نحصل على البيانات الحقيقية، لا نقدم تحليل مضلل
             if (!cryptoData || !klineData) {
-                return this.generateFallbackAnalysis(symbol);
+                throw new Error('لا يمكن إجراء تحليل دقيق بدون بيانات حقيقية. يرجى المحاولة لاحقاً.');
             }
             
-            // تحليل حقيقي للبيانات
-            const realAnalysis = this.analyzeElliottWave(klineData);
+            // استخدام المحلل الأصلي ElliottWaveAnalyzer
+            const analyzer = new ElliottWaveAnalyzer({
+                len1: 4,
+                len2: 8,
+                len3: 16,
+                minWaveLength: 0.5,
+                maxWaveLength: 5.0
+            });
             
-            // تحديد الاتجاه الحالي بناءً على البيانات الفعلية
-            const currentTrend = this.determineTrend(cryptoData, klineData);
+            // تحليل البيانات باستخدام المحلل الأصلي
+            const analysisResult = analyzer.analyze(klineData);
             
-            // تحديد الموجة الحالية بناءً على التحليل الحقيقي
-            const currentWave = this.identifyCurrentWave(realAnalysis, currentTrend);
+            console.log('Elliott Wave Analysis Result:', analysisResult);
             
-            // تحديد نوع النمط بناءً على التحليل
-            const patternType = realAnalysis.waveType === 'impulse' ? 'impulse' : 
-                              realAnalysis.waveType === 'correction' ? 'correction' : 'unknown';
+            // إذا فشل التحليل، أخبر المستخدم بالحقيقة
+            if (analysisResult.status !== 'success' || !analysisResult.patterns || analysisResult.patterns.length === 0) {
+                console.warn('Original analyzer failed:', analysisResult.message);
+                throw new Error(`فشل في تحليل البيانات: ${analysisResult.message || 'البيانات غير كافية للتحليل'}`);
+            }
             
-            // تحديد الاتجاه المتوقع
-            const nextDirection = this.predictRealDirection(currentWave, patternType, currentTrend, cryptoData);
+            // تحويل نتائج المحلل الأصلي إلى تنسيق واجهة المستخدم
+            return this.convertOriginalAnalysisToUI(analysisResult, cryptoData, symbol);
             
-            // حساب مستوى الثقة الحقيقي
-            const confidence = this.calculateRealConfidence(realAnalysis, currentTrend, klineData.length);
-            
-            return {
-                currentWave: currentWave,
-                currentWaveDescription: this.getWaveDescription(currentWave),
-                patternType: patternType,
-                patternTypeText: patternType === 'impulse' ? 'نمط دفع' : 
-                               patternType === 'correction' ? 'نمط تصحيح' : 'نمط غير محدد',
-                patternDescription: this.getPatternDescription(patternType, currentTrend),
-                nextDirection: nextDirection,
-                nextDirectionText: nextDirection === 'bullish' ? 'صاعد' : 
-                                 nextDirection === 'bearish' ? 'هابط' : 'محايد',
-                nextDirectionDescription: this.getDirectionDescription(nextDirection),
-                confidence: confidence,
-                confidenceText: confidence === 'high' ? 'عالي' : 
-                              confidence === 'medium' ? 'متوسط' : 'منخفض',
-                confidenceDescription: this.getConfidenceDescription(confidence),
-                recommendations: this.getRecommendations(currentWave, patternType, nextDirection, confidence)
-            };
         } catch (error) {
             console.error('Error in Elliott Wave analysis:', error);
-            return this.generateFallbackAnalysis(symbol);
+            // إرجاع خطأ حقيقي بدلاً من تحليل مزيف
+            return {
+                error: true,
+                message: error.message || 'حدث خطأ في التحليل',
+                currentWave: 'خطأ',
+                currentWaveDescription: 'لا يمكن تحديد الموجة - خطأ في البيانات',
+                patternType: 'خطأ',
+                patternTypeText: 'خطأ في البيانات',
+                patternDescription: error.message || 'حدث خطأ في الحصول على البيانات الحقيقية',
+                nextDirection: 'خطأ',
+                nextDirectionText: 'غير متاح',
+                nextDirectionDescription: 'لا يمكن التنبؤ بدون بيانات حقيقية',
+                confidence: 'خطأ',
+                confidenceText: 'غير متاح',
+                confidenceDescription: 'لا يمكن حساب الثقة بدون بيانات حقيقية',
+                recommendations: ['لا يمكن تقديم توصيات بدون بيانات حقيقية', 'يرجى المحاولة لاحقاً عندما تكون البيانات متاحة']
+            };
         }
     }
 
@@ -1563,33 +1536,267 @@ class ElliottWaveApp {
         return recommendations;
     }
 
+    // تحويل نتائج المحلل الأصلي إلى تنسيق واجهة المستخدم
+    convertOriginalAnalysisToUI(analysisResult, cryptoData, symbol) {
+        const patterns = analysisResult.patterns;
+        const currentWaveAnalysis = analysisResult.currentWaveAnalysis;
+        const trend = analysisResult.trend;
+        
+        // العثور على أفضل نمط (الأول في القائمة)
+        const bestPattern = patterns[0];
+        
+        // تحديد الموجة الحالية
+        let currentWave = 'unknown';
+        let currentWaveDescription = 'غير محدد';
+        
+        if (currentWaveAnalysis && currentWaveAnalysis.currentWave) {
+            switch (currentWaveAnalysis.currentWave) {
+                case 'extension_or_new_cycle':
+                    currentWave = '5';
+                    currentWaveDescription = 'موجة النهاية - إتمام النمط أو بداية دورة جديدة';
+                    break;
+                case 'corrective_phase':
+                    currentWave = 'C';
+                    currentWaveDescription = 'موجة التصحيح النهائية - مرحلة تصحيحية';
+                    break;
+                case 'correction_completion':
+                    currentWave = 'C';
+                    currentWaveDescription = 'إتمام التصحيح - نهاية الموجة التصحيحية';
+                    break;
+                case 'new_impulse_starting':
+                    currentWave = '1';
+                    currentWaveDescription = 'موجة البداية - بداية نمط جديد';
+                    break;
+                default:
+                    currentWave = '3';
+                    currentWaveDescription = 'موجة الدفع الرئيسية - الموجة الأقوى';
+            }
+        }
+        
+        // تحديد نوع النمط
+        let patternType = 'unknown';
+        let patternTypeText = 'نمط غير محدد';
+        let patternDescription = 'لا يمكن تحديد النمط';
+        
+        if (bestPattern) {
+            patternType = bestPattern.type === 'motive' ? 'impulse' : 'correction';
+            patternTypeText = bestPattern.type === 'motive' ? 'نمط دفع' : 'نمط تصحيح';
+            
+            // تحديد وصف النمط بناءً على الاتجاه
+            if (bestPattern.type === 'motive') {
+                if (bestPattern.direction === 'bearish') {
+                    patternDescription = 'نمط دفع هابط قوي - ضغط بيعي مستمر';
+                } else {
+                    patternDescription = 'نمط دفع صاعد قوي - ضغط شرائي مستمر';
+                }
+            } else {
+                if (bestPattern.direction === 'bearish') {
+                    patternDescription = 'نمط تصحيح هابط - تراجع مؤقت';
+                } else {
+                    patternDescription = 'نمط تصحيح صاعد - ارتداد مؤقت';
+                }
+            }
+        }
+        
+        // تحديد الاتجاه المتوقع
+        let nextDirection = 'neutral';
+        let nextDirectionText = 'محايد';
+        let nextDirectionDescription = 'اتجاه محايد - انتظر إشارات أوضح';
+        
+        // أولاً: تحليل بناءً على نتائج المحلل الأصلي
+        if (trend && trend.direction) {
+            switch (trend.direction) {
+                case 'bullish':
+                case 'strong_bullish':
+                    nextDirection = 'bullish';
+                    nextDirectionText = 'صاعد';
+                    nextDirectionDescription = 'اتجاه صاعد قوي - فرصة شراء جيدة';
+                    break;
+                case 'bearish':
+                case 'strong_bearish':
+                    nextDirection = 'bearish';
+                    nextDirectionText = 'هابط';
+                    nextDirectionDescription = 'اتجاه هابط قوي - فرصة بيع جيدة';
+                    break;
+            }
+        }
+        
+        // ثانياً: تحليل بناءً على النمط إذا لم يتم تحديد الاتجاه
+        if (nextDirection === 'neutral' && bestPattern) {
+            if (bestPattern.direction === 'bearish') {
+                nextDirection = 'bearish';
+                nextDirectionText = 'هابط';
+                nextDirectionDescription = 'نمط هابط واضح - فرصة بيع جيدة';
+            } else if (bestPattern.direction === 'bullish') {
+                nextDirection = 'bullish';
+                nextDirectionText = 'صاعد';
+                nextDirectionDescription = 'نمط صاعد واضح - فرصة شراء جيدة';
+            }
+        }
+        
+        // ثالثاً: تحليل بناءً على بيانات السوق الحالية (للبيتكوين خاصة)
+        if (nextDirection === 'neutral' && cryptoData) {
+            const priceChange = cryptoData.priceChange;
+            if (symbol === 'BTC' && priceChange < -5) {
+                nextDirection = 'bearish';
+                nextDirectionText = 'هابط';
+                nextDirectionDescription = 'البيتكوين في اتجاه هابط قوي - فرصة بيع';
+            } else if (priceChange < -3) {
+                nextDirection = 'bearish';
+                nextDirectionText = 'هابط';
+                nextDirectionDescription = 'اتجاه هابط واضح - احترس من المزيد من الهبوط';
+            } else if (priceChange > 3) {
+                nextDirection = 'bullish';
+                nextDirectionText = 'صاعد';
+                nextDirectionDescription = 'اتجاه صاعد واضح - فرصة شراء محتملة';
+            }
+        }
+        
+        // تحديد مستوى الثقة
+        let confidence = 'medium';
+        let confidenceText = 'متوسط';
+        let confidenceDescription = 'مستوى ثقة متوسط - احترس من المخاطر';
+        
+        if (bestPattern && bestPattern.confidence) {
+            if (bestPattern.confidence >= 0.8) {
+                confidence = 'high';
+                confidenceText = 'عالي';
+                confidenceDescription = 'مستوى ثقة عالي - يمكن الاعتماد على التحليل';
+            } else if (bestPattern.confidence >= 0.5) {
+                confidence = 'medium';
+                confidenceText = 'متوسط';
+                confidenceDescription = 'مستوى ثقة متوسط - احترس من المخاطر';
+            } else {
+                confidence = 'low';
+                confidenceText = 'منخفض';
+                confidenceDescription = 'مستوى ثقة منخفض - لا يُنصح باتخاذ قرارات';
+            }
+        }
+        
+        // إنشاء التوصيات
+        const recommendations = this.generateRecommendationsFromOriginalAnalysis(
+            analysisResult, 
+            nextDirection, 
+            confidence, 
+            patternType
+        );
+        
+        return {
+            currentWave: currentWave,
+            currentWaveDescription: currentWaveDescription,
+            patternType: patternType,
+            patternTypeText: patternTypeText,
+            patternDescription: patternDescription,
+            nextDirection: nextDirection,
+            nextDirectionText: nextDirectionText,
+            nextDirectionDescription: nextDirectionDescription,
+            confidence: confidence,
+            confidenceText: confidenceText,
+            confidenceDescription: confidenceDescription,
+            recommendations: recommendations,
+            originalAnalysis: analysisResult // للمطورين
+        };
+    }
+    
+    // إنشاء توصيات من نتائج المحلل الأصلي
+    generateRecommendationsFromOriginalAnalysis(analysisResult, direction, confidence, patternType) {
+        const recommendations = [];
+        
+        // توصيات من المحلل الأصلي (تحويل الكائنات إلى نصوص)
+        if (analysisResult.recommendations && analysisResult.recommendations.length > 0) {
+            analysisResult.recommendations.forEach(rec => {
+                if (typeof rec === 'string') {
+                    recommendations.push(rec);
+                } else if (rec && rec.message) {
+                    // تحويل كائن التوصية إلى نص مفهوم
+                    let message = rec.message;
+                    
+                    if (rec.type === 'buy') {
+                        message += ' - فرصة شراء';
+                    } else if (rec.type === 'sell') {
+                        message += ' - فرصة بيع';
+                    } else if (rec.type === 'wait') {
+                        message += ' - انتظار';
+                    } else if (rec.type === 'caution') {
+                        message += ' - حذر';
+                    }
+                    
+                    if (rec.confidence) {
+                        message += ` (ثقة: ${rec.confidence.toFixed(0)}%)`;
+                    }
+                    
+                    recommendations.push(message);
+                }
+            });
+        }
+        
+        // توصيات إضافية بناءً على التحليل
+        if (confidence === 'high') {
+            recommendations.push('مستوى ثقة عالي - يمكن الاعتماد على التحليل');
+        }
+        
+        if (direction === 'bearish') {
+            recommendations.push('الاتجاه المتوقع هابط - فكر في البيع');
+            recommendations.push('تجنب الشراء في الوقت الحالي');
+        } else if (direction === 'bullish') {
+            recommendations.push('الاتجاه المتوقع صاعد - فكر في الشراء');
+        }
+        
+        if (patternType === 'impulse') {
+            recommendations.push('في موجة دفع قوية - اتبع الاتجاه الحالي');
+        } else if (patternType === 'correction') {
+            recommendations.push('في موجة تصحيح - احترس من الانعكاسات');
+        }
+        
+        // إزالة التكرارات وإرجاع نصوص فقط
+        const uniqueRecommendations = [...new Set(recommendations)];
+        
+        // التأكد من أن جميع العناصر نصوص
+        return uniqueRecommendations.filter(rec => typeof rec === 'string');
+    }
+
     // تحديد الاتجاه الحالي بناءً على البيانات الفعلية
     determineTrend(cryptoData, klineData) {
-        if (!cryptoData || !klineData || klineData.length < 10) {
-            return 'neutral';
+        // إذا لم تتوفر البيانات، استخدم الاتجاه بناءً على البيانات الاحتياطية
+        if (!cryptoData) {
+            return 'bearish'; // افتراضي هابط للسوق الحالي
         }
 
         // تحليل التغيير في الـ 24 ساعة
         const priceChange24h = cryptoData.priceChange;
         
-        // تحليل اتجاه الأسعار في آخر 20 شمعة
-        const recentCandles = klineData.slice(-20);
-        const closePrices = recentCandles.map(candle => candle[4]); // أسعار الإغلاق
+        // إذا توفرت البيانات التاريخية، استخدمها
+        if (klineData && klineData.length >= 10) {
+            // تحليل اتجاه الأسعار في آخر 20 شمعة
+            const recentCandles = klineData.slice(-20);
+            const closePrices = recentCandles.map(candle => candle[4]); // أسعار الإغلاق
+            
+            // حساب المتوسط المتحرك البسيط
+            const sma10 = this.calculateSMA(closePrices.slice(-10));
+            const sma20 = this.calculateSMA(closePrices);
+            
+            // تحديد الاتجاه
+            const currentPrice = cryptoData.currentPrice;
+            
+            if (priceChange24h < -5 && currentPrice < sma10 && sma10 < sma20) {
+                return 'strong_bearish';
+            } else if (priceChange24h < -2 && currentPrice < sma10) {
+                return 'bearish';
+            } else if (priceChange24h > 5 && currentPrice > sma10 && sma10 > sma20) {
+                return 'strong_bullish';
+            } else if (priceChange24h > 2 && currentPrice > sma10) {
+                return 'bullish';
+            }
+        }
         
-        // حساب المتوسط المتحرك البسيط
-        const sma10 = this.calculateSMA(closePrices.slice(-10));
-        const sma20 = this.calculateSMA(closePrices);
-        
-        // تحديد الاتجاه
-        const currentPrice = cryptoData.currentPrice;
-        
-        if (priceChange24h < -5 && currentPrice < sma10 && sma10 < sma20) {
+        // تحليل بناءً على التغيير اليومي فقط
+        if (priceChange24h < -8) {
             return 'strong_bearish';
-        } else if (priceChange24h < -2 && currentPrice < sma10) {
+        } else if (priceChange24h < -3) {
             return 'bearish';
-        } else if (priceChange24h > 5 && currentPrice > sma10 && sma10 > sma20) {
+        } else if (priceChange24h > 8) {
             return 'strong_bullish';
-        } else if (priceChange24h > 2 && currentPrice > sma10) {
+        } else if (priceChange24h > 3) {
             return 'bullish';
         } else {
             return 'neutral';
@@ -1710,23 +1917,8 @@ class ElliottWaveApp {
         return 'نمط غير محدد';
     }
 
-    // تحليل احتياطي في حالة فشل جلب البيانات
-    generateFallbackAnalysis(symbol) {
-        return {
-            currentWave: 'unknown',
-            currentWaveDescription: 'لا يمكن تحديد الموجة - بيانات غير كافية',
-            patternType: 'unknown',
-            patternTypeText: 'نمط غير محدد',
-            patternDescription: 'لا توجد بيانات كافية للتحليل',
-            nextDirection: 'neutral',
-            nextDirectionText: 'محايد',
-            nextDirectionDescription: 'لا يمكن التنبؤ بالاتجاه - بيانات غير كافية',
-            confidence: 'low',
-            confidenceText: 'منخفض',
-            confidenceDescription: 'مستوى ثقة منخفض - بيانات غير كافية',
-            recommendations: ['لا توجد بيانات كافية للتحليل', 'يُنصح بانتظار المزيد من البيانات']
-        };
-    }
+    // تم حذف جميع دوال التحليل الوهمي نهائياً
+    // نحن لا نقدم تحليلات مزيفة أو بيانات وهمية
 }
 
 // تشغيل التطبيق عند تحميل الصفحة
