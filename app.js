@@ -137,7 +137,7 @@ class ElliottWaveApp {
             this.showLoading(true);
             
             // قائمة العملات المشفرة الرئيسية
-            const symbols = ['BTC', 'ETH', 'BNB', 'ADA', 'XRP', 'SOL', 'DOT', 'AVAX', 'MATIC', 'LINK'];
+            const symbols = ['BTC', 'ETH', 'BNB', 'ADA', 'XRP', 'SOL', 'DOT', 'AVAX', 'ARB', 'LINK'];
             
             // محاولة الحصول على البيانات من مصادر متعددة
             let cryptoData = [];
