@@ -76,7 +76,7 @@
 }
 
 body {
-    font-family: 'Changa', sans-serif;
+    font-family: 'Tajawal', sans-serif;
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -211,6 +211,50 @@ body {
 
 .loading-screen p {
     font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+/* Loading indicator for analysis */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.loading::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 0.5rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error styling */
+.error {
+    background-color: rgb(239 68 68 / 0.1);
+    border: 1px solid var(--danger-color);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.error h4 {
+    color: var(--danger-color);
+    margin-bottom: 0.5rem;
+}
+
+.error p {
     color: var(--text-secondary);
 }
 
@@ -1239,6 +1283,7 @@ body {
 .wave-a { background: #ff9ff3; color: white; }
 .wave-b { background: #54a0ff; color: white; }
 .wave-c { background: #5f27cd; color: white; }
+.wave-unknown { background: #6b7280; color: white; }
 
 /* Responsive adjustments for TradingView */
 @media (max-width: 768px) {
